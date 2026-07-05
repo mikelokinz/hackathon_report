@@ -417,11 +417,6 @@
       const activeBtn = document.getElementById(idMap[categoryName]);
       if (activeBtn) activeBtn.classList.add('active');
       
-      if (window.innerWidth <= 1024) {
-        const sidebar = document.querySelector('.sidebar');
-        if (sidebar) sidebar.classList.remove('open');
-      }
-      
       onFilterUpdate();
     }
 
@@ -445,11 +440,6 @@
       
       const activeBtn = document.getElementById(idMap[sectorName]);
       if (activeBtn) activeBtn.classList.add('active');
-      
-      if (window.innerWidth <= 1024) {
-        const sidebar = document.querySelector('.sidebar');
-        if (sidebar) sidebar.classList.remove('open');
-      }
       
       onFilterUpdate();
     }
@@ -522,7 +512,7 @@
         const card = document.createElement('div');
         card.id = `list-card-${item.id}`;
         card.className = `compact-program-card ${item.id === selectedId ? 'selected' : ''}`;
-        card.onclick = () => selectProgram(item.id);
+        card.onclick = () => selectProgram(item.id, true);
         
         let domainClass = 'domain-opensource';
         const d = item.domain.toLowerCase();
@@ -573,7 +563,7 @@
     };
 
     // Populate Right Panel details inspector
-    function selectProgram(id) {
+    function selectProgram(id, isUserClick = false) {
       selectedId = id;
       
       // Update selected class in compact card list
@@ -588,6 +578,11 @@
       
       const inspector = document.getElementById('split-inspector');
       
+      if (isUserClick && window.innerWidth <= 768) {
+        inspector.classList.add('open');
+        document.body.classList.add('modal-open');
+      }
+      
       let domainClass = 'domain-opensource';
       const d = item.domain.toLowerCase();
       if (d.includes('ecommerce')) domainClass = 'domain-ecommerce';
@@ -600,9 +595,15 @@
       const regDetails = registrationDetails[id] || { start: "N/A", end: "N/A", target: "", event: "N/A", link: "#" };
       
       inspector.innerHTML = `
-        <div class="inspector-view-animated">
-          <div class="inspector-company">${item.company}</div>
-          <h3 class="inspector-title">${item.name}</h3>
+        <button class="inspector-close-btn" onclick="closeInspector()" aria-label="Close details">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        <div class="inspector-scroll-container">
+          <div class="inspector-view-animated">
+            <div class="inspector-company">${item.company}</div>
+            <h3 class="inspector-title">${item.name}</h3>
           
           <div class="inspector-badges">
             <span class="domain-badge ${domainClass}">${item.domain}</span>
@@ -644,16 +645,16 @@
             </div>
 
             <!-- Event Dates Table Grid -->
-            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin-top:0.75rem;">
-              <div style="background:rgba(255,255,255,0.01); border:1px solid var(--panel-border); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div class="inspector-dates-grid">
+              <div class="inspector-date-item">
                 <div style="font-size:0.6rem; color:var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.25px;">Registration Starts</div>
                 <div style="font-size:0.8rem; color:#fff; font-weight:600; margin-top:2px;">${regDetails.start}</div>
               </div>
-              <div style="background:rgba(255,255,255,0.01); border:1px solid var(--panel-border); border-radius:8px; padding:0.5rem 0.75rem;">
+              <div class="inspector-date-item">
                 <div style="font-size:0.6rem; color:var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.25px;">Registration Deadline</div>
                 <div style="font-size:0.8rem; color:#fff; font-weight:600; margin-top:2px;">${regDetails.end}</div>
               </div>
-              <div style="background:rgba(255,255,255,0.01); border:1px solid var(--panel-border); border-radius:8px; padding:0.5rem 0.75rem;">
+              <div class="inspector-date-item">
                 <div style="font-size:0.6rem; color:var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.25px;">Official Event Date</div>
                 <div style="font-size:0.8rem; color:#fff; font-weight:600; margin-top:2px;">${regDetails.event}</div>
               </div>
@@ -715,6 +716,7 @@
             </div>
           </div>
         </div>
+      </div>
       `;
       updateCountdowns(); // Run immediate update for the inspector timer values
     }
@@ -1055,9 +1057,23 @@
     // Toggle Mobile Sidebar Drawer
     function toggleSidebar() {
       const sidebar = document.querySelector('.sidebar');
+      const hamburgerBtn = document.querySelector('.hamburger-btn');
       if (sidebar) {
-        sidebar.classList.toggle('open');
+        const isOpen = sidebar.classList.toggle('open');
+        if (hamburgerBtn) {
+          hamburgerBtn.classList.toggle('open', isOpen);
+        }
+        document.body.classList.toggle('sidebar-open', isOpen);
       }
+    }
+
+    // Close Mobile Program Details Inspector Popup
+    function closeInspector() {
+      const inspector = document.getElementById('split-inspector');
+      if (inspector) {
+        inspector.classList.remove('open');
+      }
+      document.body.classList.remove('modal-open');
     }
 
     // Countdown Timer ticks engine
@@ -1149,4 +1165,34 @@
       startLiveStream(); // Trigger live telemetry stream
       updateCountdowns(); // Initial countdown values
       setInterval(updateCountdowns, 1000); // Start live 1s ticks!
+    });
+
+    // Close sidebar drawer on click outside
+    document.addEventListener('click', (event) => {
+      const sidebar = document.querySelector('.sidebar');
+      const hamburgerBtn = document.querySelector('.hamburger-btn');
+      const displayCloseBtn = document.querySelector('.display-close-btn');
+      
+      if (sidebar && sidebar.classList.contains('open')) {
+        // Check if the click was outside the sidebar, hamburger button, and global close button
+        if (!sidebar.contains(event.target) && 
+            !hamburgerBtn.contains(event.target) && 
+            (!displayCloseBtn || !displayCloseBtn.contains(event.target))) {
+          sidebar.classList.remove('open');
+          if (hamburgerBtn) hamburgerBtn.classList.remove('open');
+          document.body.classList.remove('sidebar-open');
+        }
+      }
+    });
+
+    // Handle hamburger button transition on page scroll on mobile
+    window.addEventListener('scroll', () => {
+      const hamburgerBtn = document.querySelector('.hamburger-btn');
+      if (hamburgerBtn) {
+        if (window.scrollY > 0) {
+          hamburgerBtn.classList.add('scrolled');
+        } else {
+          hamburgerBtn.classList.remove('scrolled');
+        }
+      }
     });

@@ -20,6 +20,13 @@
   <!-- Static Grids Layer -->
   <div class="bg-grid"></div>
 
+  <!-- Global Viewport Close Button for Sidebar -->
+  <button class="display-close-btn" onclick="toggleSidebar()" aria-label="Close menu">
+    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+  </button>
+
   <div class="app-layout">
     
     <!-- Left Sidebar Control Center -->
@@ -136,11 +143,16 @@
       
       <!-- Top sticky workspace header -->
       <div class="workspace-header">
-        <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
-          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-        </button>
+        <div class="hamburger-wrapper">
+          <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+            <svg class="icon-menu" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <svg class="icon-close" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
         <div style="display:flex; flex-direction:column; gap:0.25rem">
           <h2 style="font-family:var(--font-title); font-weight:700; font-size:1.15rem; color:#fff">2026 RECRUITMENT OPERATIONS CENTER</h2>
           <span style="font-size:0.75rem; color:var(--text-dim)">Cooperative Education & Internship Pipelines Analysis</span>
@@ -254,7 +266,7 @@
       <!-- Sticky footer inside workspace -->
       <footer style="padding:2rem 0; text-align:center">
         <div>2026 Competitive Hackathon & Internship Analysis Dashboard</div>
-        <div style="font-size:0.75rem; margin-top:0.4rem; color:var(--text-dim)">Data parsed from [extracted_content.txt](file:///e:/HOPE/Project/hack_report/extracted_content.txt)</div>
+        <div style="font-size:0.75rem; margin-top:0.4rem; color:var(--text-dim)">By mikelokinz</div>
       </footer>
     </main>
 
