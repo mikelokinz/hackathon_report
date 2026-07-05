@@ -1210,10 +1210,7 @@
       let fadeTimeout;
 
       function getScrollSource() {
-        if (window.innerWidth > 1024) {
-          return document.querySelector('.main-workspace') || window;
-        }
-        return window;
+        return document.querySelector('.main-workspace') || window;
       }
 
       let lastScrollTop = -1;

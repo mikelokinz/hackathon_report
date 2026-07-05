@@ -29,7 +29,8 @@
 
     html, body {
       width: 100%;
-      overflow-x: hidden;
+      height: 100%;
+      overflow: hidden;
     }
 
     body {
@@ -41,7 +42,7 @@
       background-attachment: fixed;
       color: var(--text-main);
       font-family: var(--font-body);
-      min-height: 100vh;
+      height: 100%;
     }
 
     /* Hide native scrollbars on the main viewport containers to prevent space consumption */
@@ -90,12 +91,15 @@
     .app-layout {
       display: grid;
       grid-template-columns: 320px 1fr;
-      min-height: 100vh;
+      height: 100%;
+      overflow: hidden;
     }
 
     @media (max-width: 1024px) {
       .app-layout {
         grid-template-columns: 1fr;
+        height: 100%;
+        overflow: hidden;
       }
     }
 
@@ -320,14 +324,15 @@
     .main-workspace {
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      height: 100%;
       overflow-y: auto;
     }
 
     @media (max-width: 1024px) {
       .main-workspace {
-        height: auto;
-        overflow-y: visible;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
     }
 
