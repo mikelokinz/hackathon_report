@@ -44,7 +44,18 @@
       min-height: 100vh;
     }
 
-    /* Webkit scrollbars */
+    /* Hide native scrollbars on the main viewport containers to prevent space consumption */
+    html, body, .main-workspace {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE and Edge */
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    .main-workspace::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+
+    /* Webkit scrollbars for other inner containers */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -1078,4 +1089,62 @@
       .compact-title {
         font-size: 0.9rem;
       }
+    }
+
+    /* Custom Scrollbar Overlay Styles */
+    .custom-scrollbar {
+      position: fixed;
+      right: 4px; /* ~1mm gap from screen edge */
+      top: 4px;
+      bottom: 4px;
+      width: 4px; /* Thin line */
+      z-index: 999999; /* Higher than any sidebar or popup */
+      background: transparent;
+      pointer-events: auto;
+      transition: width 0.25s ease, background-color 0.25s ease, opacity 0.3s ease;
+      border-radius: 10px;
+    }
+
+    .custom-scrollbar:hover,
+    .custom-scrollbar.active {
+      width: 8px; /* Slightly wider for easier interaction when hovered/dragged */
+      background: rgba(255, 255, 255, 0.03); /* Subtle background track on hover */
+    }
+
+    .custom-scrollbar-thumb {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 0; /* Set dynamically by JS */
+      background: linear-gradient(to bottom, var(--color-primary), var(--color-secondary));
+      border-radius: 10px;
+      cursor: pointer;
+      opacity: 0; /* Hidden by default */
+      transition: opacity 0.3s ease, background 0.15s ease;
+      box-shadow: 0 0 8px rgba(138, 43, 226, 0.4);
+    }
+
+    .custom-scrollbar-thumb.visible,
+    .custom-scrollbar:hover .custom-scrollbar-thumb,
+    .custom-scrollbar.active .custom-scrollbar-thumb {
+      opacity: 1; /* Make visible on scroll, hover, or drag */
+    }
+
+    .custom-scrollbar-thumb:hover {
+      background: linear-gradient(to bottom, var(--color-secondary), var(--color-accent));
+      box-shadow: 0 0 12px var(--color-secondary);
+    }
+
+    .custom-scrollbar-thumb:active {
+      background: linear-gradient(to bottom, var(--color-accent), var(--color-primary));
+      box-shadow: 0 0 12px var(--color-accent);
+    }
+
+    /* Helper utility for preventing text selection during scroll dragging */
+    .user-select-none {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
     }

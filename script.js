@@ -1165,6 +1165,7 @@
       startLiveStream(); // Trigger live telemetry stream
       updateCountdowns(); // Initial countdown values
       setInterval(updateCountdowns, 1000); // Start live 1s ticks!
+      initCustomScrollbar(); // Setup overlay custom scrollbar
     });
 
     // Close sidebar drawer on click outside
@@ -1196,3 +1197,263 @@
         }
       }
     });
+
+    // Custom Scrollbar Logic
+    function initCustomScrollbar() {
+      const scrollbar = document.getElementById('custom-scrollbar');
+      const thumb = document.getElementById('custom-scrollbar-thumb');
+      if (!scrollbar || !thumb) return;
+
+      let isDragging = false;
+      let startY = 0;
+      let startScrollTop = 0;
+      let fadeTimeout;
+
+      function getScrollSource() {
+        if (window.innerWidth > 1024) {
+          return document.querySelector('.main-workspace') || window;
+        }
+        return window;
+      }
+
+      let lastScrollTop = -1;
+      let lastScrollHeight = -1;
+      let lastClientHeight = -1;
+
+      function updateScrollbar() {
+        const source = getScrollSource();
+        let scrollTop = 0;
+        let scrollHeight = 0;
+        let clientHeight = 0;
+
+        if (source === window) {
+          scrollTop = window.scrollY;
+          scrollHeight = document.documentElement.scrollHeight;
+          clientHeight = window.innerHeight;
+        } else {
+          scrollTop = source.scrollTop;
+          scrollHeight = source.scrollHeight;
+          clientHeight = source.clientHeight;
+        }
+
+        // Optimize: Do nothing if dimensions and position haven't changed
+        if (scrollTop === lastScrollTop && 
+            scrollHeight === lastScrollHeight && 
+            clientHeight === lastClientHeight) {
+          return;
+        }
+
+        lastScrollTop = scrollTop;
+        lastScrollHeight = scrollHeight;
+        lastClientHeight = clientHeight;
+
+        const scrollableHeight = scrollHeight - clientHeight;
+        if (scrollableHeight <= 0) {
+          scrollbar.style.opacity = '0';
+          scrollbar.style.pointerEvents = 'none';
+          return;
+        } else {
+          scrollbar.style.opacity = '1';
+          scrollbar.style.pointerEvents = 'auto';
+        }
+
+        const scrollbarHeight = scrollbar.clientHeight;
+        const thumbHeight = Math.max(30, (clientHeight / scrollHeight) * scrollbarHeight);
+        const maxThumbTop = scrollbarHeight - thumbHeight;
+        const thumbTop = (scrollTop / scrollableHeight) * maxThumbTop;
+
+        thumb.style.height = `${thumbHeight}px`;
+        thumb.style.transform = `translateY(${thumbTop}px)`;
+
+        // Show thumb
+        thumb.classList.add('visible');
+        clearTimeout(fadeTimeout);
+        fadeTimeout = setTimeout(() => {
+          if (!isDragging && !scrollbar.matches(':hover')) {
+            thumb.classList.remove('visible');
+          }
+        }, 1500);
+      }
+
+      // Add scroll event listener to both window and main-workspace
+      window.addEventListener('scroll', updateScrollbar, { passive: true });
+      
+      const workspace = document.querySelector('.main-workspace');
+      if (workspace) {
+        workspace.addEventListener('scroll', updateScrollbar, { passive: true });
+      }
+
+      window.addEventListener('resize', updateScrollbar);
+
+      // Trigger initial scroll update
+      updateScrollbar();
+
+      // Drag behavior
+      thumb.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startY = e.clientY;
+        const source = getScrollSource();
+        startScrollTop = (source === window) ? window.scrollY : source.scrollTop;
+        
+        document.body.classList.add('user-select-none');
+        thumb.classList.add('visible');
+        scrollbar.classList.add('active');
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const source = getScrollSource();
+        let scrollHeight = 0;
+        let clientHeight = 0;
+
+        if (source === window) {
+          scrollHeight = document.documentElement.scrollHeight;
+          clientHeight = window.innerHeight;
+        } else {
+          scrollHeight = source.scrollHeight;
+          clientHeight = source.clientHeight;
+        }
+
+        const scrollableHeight = scrollHeight - clientHeight;
+        if (scrollableHeight <= 0) return;
+
+        const scrollbarHeight = scrollbar.clientHeight;
+        const thumbHeight = parseFloat(thumb.style.height);
+        const maxThumbTop = scrollbarHeight - thumbHeight;
+
+        const deltaY = e.clientY - startY;
+        const ratio = deltaY / maxThumbTop;
+        const targetScroll = startScrollTop + ratio * scrollableHeight;
+
+        if (source === window) {
+          window.scrollTo(0, targetScroll);
+        } else {
+          source.scrollTop = targetScroll;
+        }
+        updateScrollbar();
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          document.body.classList.remove('user-select-none');
+          scrollbar.classList.remove('active');
+          updateScrollbar();
+        }
+      });
+
+      // Drag behavior for touch (mobile)
+      thumb.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 0) return;
+        isDragging = true;
+        startY = e.touches[0].clientY;
+        const source = getScrollSource();
+        startScrollTop = (source === window) ? window.scrollY : source.scrollTop;
+        
+        thumb.classList.add('visible');
+        scrollbar.classList.add('active');
+        e.preventDefault();
+      }, { passive: false });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isDragging || e.touches.length === 0) return;
+        const source = getScrollSource();
+        let scrollHeight = 0;
+        let clientHeight = 0;
+
+        if (source === window) {
+          scrollHeight = document.documentElement.scrollHeight;
+          clientHeight = window.innerHeight;
+        } else {
+          scrollHeight = source.scrollHeight;
+          clientHeight = source.clientHeight;
+        }
+
+        const scrollableHeight = scrollHeight - clientHeight;
+        if (scrollableHeight <= 0) return;
+
+        const scrollbarHeight = scrollbar.clientHeight;
+        const thumbHeight = parseFloat(thumb.style.height);
+        const maxThumbTop = scrollbarHeight - thumbHeight;
+
+        const deltaY = e.touches[0].clientY - startY;
+        const ratio = deltaY / maxThumbTop;
+        const targetScroll = startScrollTop + ratio * scrollableHeight;
+
+        if (source === window) {
+          window.scrollTo(0, targetScroll);
+        } else {
+          source.scrollTop = targetScroll;
+        }
+        updateScrollbar();
+        e.preventDefault();
+      }, { passive: false });
+
+      window.addEventListener('touchend', () => {
+        if (isDragging) {
+          isDragging = false;
+          scrollbar.classList.remove('active');
+          updateScrollbar();
+        }
+      });
+
+      // Click on track scrolls page
+      scrollbar.addEventListener('click', (e) => {
+        if (e.target === thumb) return;
+        const source = getScrollSource();
+        let scrollHeight = 0;
+        let clientHeight = 0;
+
+        if (source === window) {
+          scrollHeight = document.documentElement.scrollHeight;
+          clientHeight = window.innerHeight;
+        } else {
+          scrollHeight = source.scrollHeight;
+          clientHeight = source.clientHeight;
+        }
+
+        const scrollableHeight = scrollHeight - clientHeight;
+        if (scrollableHeight <= 0) return;
+
+        const scrollbarRect = scrollbar.getBoundingClientRect();
+        const clickY = e.clientY - scrollbarRect.top;
+        const scrollbarHeight = scrollbar.clientHeight;
+        const thumbHeight = parseFloat(thumb.style.height);
+
+        const targetThumbTop = clickY - thumbHeight / 2;
+        const maxThumbTop = scrollbarHeight - thumbHeight;
+        const ratio = Math.max(0, Math.min(1, targetThumbTop / maxThumbTop));
+
+        if (source === window) {
+          window.scrollTo({
+            top: ratio * scrollableHeight,
+            behavior: 'smooth'
+          });
+        } else {
+          source.scrollTo({
+            top: ratio * scrollableHeight,
+            behavior: 'smooth'
+          });
+        }
+      });
+
+      // Keep scrollbar visible when hovering track
+      scrollbar.addEventListener('mouseenter', () => {
+        thumb.classList.add('visible');
+        clearTimeout(fadeTimeout);
+      });
+      scrollbar.addEventListener('mouseleave', () => {
+        if (!isDragging) {
+          fadeTimeout = setTimeout(() => {
+            thumb.classList.remove('visible');
+          }, 1000);
+        }
+      });
+
+      // Expose updateScrollbar globally so other content rendering can trigger it
+      window.updateCustomScrollbar = updateScrollbar;
+
+      // Periodically check for layout or height changes (100% loop-safe and lightweight)
+      setInterval(updateScrollbar, 250);
+    }
